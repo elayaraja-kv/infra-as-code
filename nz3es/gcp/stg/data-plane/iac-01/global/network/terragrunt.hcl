@@ -15,7 +15,7 @@ inputs = {
     "ause2" = {
       region = "australia-southeast2"
       cidr   = "10.1.0.0/24"
-    }
+    },
     "ause1" = {
       region = "australia-southeast1"
       cidr   = "10.2.0.0/24"

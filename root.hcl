@@ -30,7 +30,7 @@ locals {
 
   # All labels (merged)
   labels = {
-    managed_by  = "terragrunt"
+    managed_by  = "atlantis"
     org         = "nz3es"
     environment = local.environment
     plane       = local.plane

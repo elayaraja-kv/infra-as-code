@@ -1,6 +1,31 @@
 # gcp-iac
 
-Infrastructure as Code on GCP
+Infrastructure as Code on GCP using Terragrunt.
+
+## Folder Structure
+
+```text
+root.hcl                                    # Root config (path parsing, labels, provider)
+modules/                                    # Terraform modules
+  └── vpc/
+nz3es/gcp/{env}/{plane}/{project}/{region}/{component}/
+  └── terragrunt.hcl
+```
+
+Values are auto-parsed from path: `environment`, `plane`, `project`, `region`, `component`
+
+## Usage
+
+```bash
+# Set environment variables
+export GOOGLE_APPLICATION_CREDENTIALS="/path/to/sa-key.json"
+export GCP_PROJECT="iac-01"
+export GCP_REGION="australia-southeast2"
+
+# Deploy
+cd nz3es/gcp/stg/data-plane/iac-01/global/network
+terragrunt apply
+```
 
 ## Prerequisites (bootstrap)
 
