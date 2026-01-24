@@ -26,15 +26,15 @@ inputs = {
   visibility  = "public"
 
   records = {
-    "app" = {
-      type    = "A"
-      ttl     = 300
-      rrdatas = ["10.2.0.10"]
-    },
-    "db" = {
-      type    = "A"
-      ttl     = 300
-      rrdatas = ["10.2.0.20"]
-    },
+    # "app" = {
+    #   type    = "A"
+    #   ttl     = 300
+    #   rrdatas = ["10.2.0.10"]
+    # },
+    # "db" = {
+    #   type    = "A"
+    #   ttl     = 300
+    #   rrdatas = ["10.2.0.20"]
+    # },
   }
 }
