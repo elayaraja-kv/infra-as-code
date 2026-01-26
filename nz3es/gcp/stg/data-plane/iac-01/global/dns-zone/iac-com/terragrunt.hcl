@@ -3,10 +3,6 @@ include "root" {
   expose = true
 }
 
-dependency "network" {
-  config_path = "../../network"
-}
-
 terraform {
   source = "../../../../../../../../modules/dns-zone"
 }

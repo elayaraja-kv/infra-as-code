@@ -5,6 +5,35 @@ include "root" {
 
 dependency "network" {
   config_path = "../../network"
+
+  mock_outputs = {
+    network_self_link = "mock-network-self-link"
+    network_id        = "mock-network-id"
+    subnets           = {}
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
+
+dependency "valkey" {
+  config_path = "../../../australia-southeast2/memorystore/volatile-lru"
+
+  mock_outputs = {
+    endpoints = [
+      {
+        connections = [
+          {
+            psc_auto_connection = [
+              {
+                connection_type = "CONNECTION_TYPE_DISCOVERY"
+                ip_address      = "10.0.0.1"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 
 terraform {
@@ -37,6 +66,19 @@ inputs = {
       type    = "A"
       ttl     = 300
       rrdatas = ["10.1.0.20"]
+    },
+    "volatile-lru" = {
+      type    = "A"
+      ttl     = 300
+      rrdatas = flatten([
+        for endpoint in dependency.valkey.outputs.endpoints : [
+          for conn in endpoint.connections : [
+            for psc in conn.psc_auto_connection :
+            psc.ip_address
+            if psc.connection_type == "CONNECTION_TYPE_DISCOVERY"
+          ]
+        ]
+      ])
     },
   }
 }
