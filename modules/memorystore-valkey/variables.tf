@@ -18,12 +18,6 @@ variable "network" {
   type        = string
 }
 
-variable "network_project" {
-  description = "Project ID of the network (defaults to project_id)"
-  type        = string
-  default     = null
-}
-
 variable "node_type" {
   description = "Node type: SHARED_CORE_NANO, HIGHMEM_MEDIUM, HIGHMEM_XLARGE, STANDARD_SMALL"
   type        = string
