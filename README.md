@@ -19,6 +19,7 @@ Values are auto-parsed from path: `environment`, `plane`, `project`, `region`, `
 ## Modules
 
 ### VPC (`modules/vpc`)
+
 Creates a VPC network with multiple subnets.
 
 | Input | Type | Description |
@@ -28,6 +29,7 @@ Creates a VPC network with multiple subnets.
 | `subnets` | map(object) | Map of subnets with region and CIDR |
 
 ### DNS Zone (`modules/dns-zone`)
+
 Creates public or private DNS zones with records.
 
 | Input | Type | Description |
@@ -39,6 +41,7 @@ Creates public or private DNS zones with records.
 | `records` | map(object) | DNS records (type, ttl, rrdatas) |
 
 ### Memorystore Valkey (`modules/memorystore-valkey`)
+
 Creates a Memorystore for Valkey instance with PSC connectivity.
 
 | Input | Type | Description |
@@ -57,6 +60,7 @@ Creates a Memorystore for Valkey instance with PSC connectivity.
 ## Configuration
 
 ### Region Short Names
+
 Defined in `root.hcl` for subnet naming:
 
 | Region | Short Name |
@@ -71,6 +75,7 @@ Defined in `root.hcl` for subnet naming:
 | `global` | `gbl` |
 
 ### Labels
+
 Auto-applied labels from path:
 
 ```hcl
@@ -86,6 +91,7 @@ labels = {
 ```
 
 ### Multiple Subnets per Region
+
 Configure in `root.hcl`:
 
 ```hcl
@@ -177,6 +183,7 @@ terragrunt run-all apply
         "roles/iam.serviceAccountUser"
         "roles/memorystore.admin"
         "roles/networkconnectivity.admin"
+        "roles/secretmanager.admin"
     )
 
     # Loop through each role and assign it
