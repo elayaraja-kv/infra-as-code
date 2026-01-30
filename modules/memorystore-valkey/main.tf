@@ -15,5 +15,4 @@ module "valkey" {
   authorization_mode          = var.authorization_mode
   transit_encryption_mode     = var.transit_encryption_mode
   engine_configs              = var.engine_configs
-  service_connection_policies = var.service_connection_policies
 }

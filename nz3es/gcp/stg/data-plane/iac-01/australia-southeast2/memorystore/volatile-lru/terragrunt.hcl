@@ -3,6 +3,15 @@ include "root" {
   expose = true
 }
 
+dependency "scp" {
+  config_path = "../../service-connection-policy/valkey-psc"
+
+  mock_outputs = {
+    policy_ids = { "valkey-psc" = "mock-policy-id" }
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
+
 terraform {
   source = "../../../../../../../../modules/memorystore-valkey"
 }
@@ -28,13 +37,6 @@ inputs = {
 
   engine_configs = {
     "maxmemory-policy" = local.instance_name
-  }
-
-  service_connection_policies = {
-    "valkey-psc" = {
-      network_name = format("%s-%s", include.root.locals.environment, include.root.locals.project)
-      subnet_names = include.root.locals.subnets
-    }
   }
 
   deletion_protection_enabled = false # Set to true for production

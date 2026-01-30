@@ -72,15 +72,3 @@ variable "engine_configs" {
   default     = {}
 }
 
-variable "service_connection_policies" {
-  description = "Service Connection Policies for PSC"
-  type = map(object({
-    subnet_names    = list(string)
-    network_name    = string
-    network_project = optional(string)
-    limit           = optional(number)
-    labels          = optional(map(string))
-    description     = optional(string)
-  }))
-  default = {}
-}
