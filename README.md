@@ -184,6 +184,7 @@ terragrunt run-all apply
         "roles/memorystore.admin"
         "roles/networkconnectivity.admin"
         "roles/secretmanager.admin"
+        "roles/container.clusterAdmin"
     )
 
     # Loop through each role and assign it
@@ -204,3 +205,11 @@ terragrunt run-all apply
 ## Troubleshooting
 
 See [backup/troubleshooting.md](backup/troubleshooting.md) for common issues and solutions.
+
+gcloud container node-pools list --cluster=stg-iac-01 --region=australia-southeast2 --project=iac-01
+
+cd nz3es/gcp/stg/data-plane/iac-01/australia-southeast2/gke/stg-iac-01
+
+terragrunt import 'module.gke.google_container_node_pool.pools["default-pool"]' projects/iac-01/locations/australia-southeast2/clusters/stg-iac-01/nodePools/default-pool
+
+gcloud container clusters get-credentials stg-iac-01 --region australia-southeast2 --project iac-01
