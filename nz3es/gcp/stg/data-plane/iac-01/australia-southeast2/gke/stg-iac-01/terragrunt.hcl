@@ -55,17 +55,17 @@ inputs = {
   initial_node_count       = 0
 
   cluster_autoscaling = {
-    enabled             = false
-    autoscaling_profile = "OPTIMIZE_UTILIZATION"
-    # min_cpu_cores                = 0
-    # max_cpu_cores                = 16
-    # min_memory_gb                = 0
-    # max_memory_gb                = 64
+    enabled                      = true
+    autoscaling_profile          = "OPTIMIZE_UTILIZATION"
+    min_cpu_cores                = 0
+    max_cpu_cores                = 16
+    min_memory_gb                = 0
+    max_memory_gb                = 64
     gpu_resources                = []
     auto_repair                  = true
     auto_upgrade                 = true
     enable_default_compute_class = true
-    # service_account              = dependency.service_account.outputs.email
+    service_account              = dependency.service_account.outputs.email
   }
 
   node_pools = [
