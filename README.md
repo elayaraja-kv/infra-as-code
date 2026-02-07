@@ -271,19 +271,23 @@ terragrunt run-all apply
 
 gcloud container clusters get-credentials stg-iac-01 --region australia-southeast2 --project iac-01
 
-## Enable computer class
+## Enable compute class
 
 ### Namespace level
 
 ```bash
-# Enable on namespace level
-kubectl annotate namespace <namespace> cloud.google.com/default-compute-class=autopilot
+# Set default compute class at namespace level (must be a label, not annotation)
+# Pods in this namespace will automatically get nodeSelector injected — no workload-level changes needed
+kubectl label namespace <namespace> cloud.google.com/default-compute-class=autopilot --overwrite
 
-# verify: 
-kubectl get namespace <namespace> -o jsonpath='{.metadata.annotations}'
+# Verify namespace label
+kubectl get namespace <namespace> -o jsonpath='{.metadata.labels}'
+
+# Verify nodeSelector is injected into pods
+kubectl -n <namespace> get pods <podname> -o yaml | grep -A1 nodeSelector
 
 # Remove
-kubectl annotate namespace <namespace> cloud.google.com/default-compute-class-
+kubectl label namespace <namespace> cloud.google.com/default-compute-class-
 ```
 
 ### workload level
