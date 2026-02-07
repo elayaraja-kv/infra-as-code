@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-tolerations
+spec:
+  selector:
+    matchLabels:
+      app: nginx-tolerations
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nginx-tolerations
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.14.2
+          ports:
+            - containerPort: 80
+          resources:
+            limits:
+              cpu: "500m"
+              memory: "128Mi"
+            requests:
+              cpu: "250m"
+              memory: "64Mi"
+      tolerations:
+        - key: "nz3es/dedicated"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+      nodeSelector:
+        node_pool: "nz3es-spot-pool"
+        nz3es/dedicated: "true"
