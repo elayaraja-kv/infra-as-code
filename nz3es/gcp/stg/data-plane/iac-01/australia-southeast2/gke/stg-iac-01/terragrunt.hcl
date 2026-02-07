@@ -48,7 +48,26 @@ inputs = {
   enable_private_nodes    = true
   enable_private_endpoint = false
 
-  master_authorized_networks = []
+  master_authorized_networks = concat(
+    [
+      {
+        cidr_block   = "${get_env("GKE_MASTER_CIDR", "125.237.27.134/32")}"
+        display_name = "nz3es-home"
+      }
+    ],
+    get_env("GKE_MASTER_CIDR_1", "") != "" ? [
+      {
+        cidr_block   = get_env("GKE_MASTER_CIDR_1", "")
+        display_name = "nz3es-additional-1"
+      }
+    ] : [],
+    get_env("GKE_MASTER_CIDR_2", "") != "" ? [
+      {
+        cidr_block   = get_env("GKE_MASTER_CIDR_2", "")
+        display_name = "nz3es-additional-2"
+      }
+    ] : [],
+  )
 
   # Node pools
   remove_default_node_pool = true
@@ -80,8 +99,39 @@ inputs = {
       image_type         = "COS_CONTAINERD"
       auto_repair        = true
       auto_upgrade       = true
+    },
+    {
+      name               = "nz3es-spot-pool"
+      machine_type       = "e2-medium"
+      initial_node_count = 0
+      min_count          = 0
+      max_count          = 2
+      disk_size_gb       = 100
+      disk_type          = "pd-standard"
+      image_type         = "COS_CONTAINERD"
+      auto_repair        = true
+      auto_upgrade       = true
+      spot               = true
     }
   ]
+
+  node_pools_labels = {
+    all = {}
+    nz3es-spot-pool = {
+      "nz3es/dedicated" = "true"
+    }
+  }
+
+  node_pools_taints = {
+    all = []
+    nz3es-spot-pool = [
+      {
+        key    = "nz3es/dedicated"
+        value  = "true"
+        effect = "NO_SCHEDULE"
+      }
+    ]
+  }
 
   # Cluster config
   kubernetes_version  = "1.34"
@@ -89,6 +139,22 @@ inputs = {
   labels              = include.root.locals.labels
   deletion_protection = false # Set to true for production
   datapath_provider   = "ADVANCED_DATAPATH"
+
+  # Security
+  security_posture_mode                  = "BASIC"
+  security_posture_vulnerability_mode    = "VULNERABILITY_BASIC"
+  enable_binary_authorization            = false # Set to true for production
+  insecure_kubelet_readonly_port_enabled = false
+
+  # Maintenance window (Sat-Sun 3:00 AM - 9:00 AM NZST)
+  maintenance_start_time = "2025-01-01T15:00:00Z" # 3:00 AM NZST (UTC+12)
+  maintenance_end_time   = "2025-01-01T21:00:00Z" # 9:00 AM NZST (UTC+12)
+  maintenance_recurrence = "FREQ=WEEKLY;BYDAY=SA,SU"
+
+  # Best practice
+  enable_vertical_pod_autoscaling = true
+  enable_intranode_visibility     = true
+  enable_cost_allocation          = true
 
   # Service account
   create_service_account = false

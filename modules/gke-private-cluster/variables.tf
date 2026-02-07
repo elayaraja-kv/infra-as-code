@@ -78,6 +78,12 @@ variable "node_pools_tags" {
   default     = {}
 }
 
+variable "node_pools_taints" {
+  description = "Taints for node pools keyed by pool name"
+  type        = map(list(object({ key = string, value = string, effect = string })))
+  default     = {}
+}
+
 variable "kubernetes_version" {
   description = "Kubernetes version for the master and nodes"
   type        = string
@@ -196,6 +202,97 @@ variable "service_account" {
   description = "Service account email to use for nodes (when create_service_account is false)"
   type        = string
   default     = ""
+}
+
+## Security
+
+variable "security_posture_mode" {
+  description = "Security posture mode: DISABLED, BASIC, or ENTERPRISE"
+  type        = string
+  default     = "BASIC"
+}
+
+variable "security_posture_vulnerability_mode" {
+  description = "Vulnerability scanning mode: VULNERABILITY_DISABLED, VULNERABILITY_BASIC, or VULNERABILITY_ENTERPRISE"
+  type        = string
+  default     = "VULNERABILITY_BASIC"
+}
+
+variable "enable_binary_authorization" {
+  description = "Enable Binary Authorization to enforce deploy-time security policies"
+  type        = bool
+  default     = false
+}
+
+variable "enable_confidential_nodes" {
+  description = "Enable Confidential GKE Nodes (encrypts node memory, requires N2D/C2D machine types)"
+  type        = bool
+  default     = false
+}
+
+variable "insecure_kubelet_readonly_port_enabled" {
+  description = "Whether the read-only port (10255) on the kubelet is enabled. Set to false for security"
+  type        = bool
+  default     = false
+}
+
+variable "node_pools_oauth_scopes" {
+  description = "OAuth scopes for node pools keyed by pool name"
+  type        = map(list(string))
+  default = {
+    all = ["https://www.googleapis.com/auth/cloud-platform"]
+  }
+}
+
+## Maintenance
+
+variable "maintenance_start_time" {
+  description = "Time window specified for daily or recurring maintenance operations in RFC3339 format (HH:MM)"
+  type        = string
+  default     = "05:00"
+}
+
+variable "maintenance_end_time" {
+  description = "Time window end for recurring maintenance in RFC3339 format"
+  type        = string
+  default     = ""
+}
+
+variable "maintenance_recurrence" {
+  description = "Frequency of the recurring maintenance window in RFC5545 format"
+  type        = string
+  default     = ""
+}
+
+variable "maintenance_exclusions" {
+  description = "List of maintenance exclusion windows"
+  type = list(object({
+    name            = string
+    start_time      = string
+    end_time        = string
+    exclusion_scope = string
+  }))
+  default = []
+}
+
+## Best practice
+
+variable "enable_vertical_pod_autoscaling" {
+  description = "Enable Vertical Pod Autoscaling for automatic resource right-sizing"
+  type        = bool
+  default     = false
+}
+
+variable "enable_intranode_visibility" {
+  description = "Enable intra-node visibility to see pod-to-pod traffic within nodes"
+  type        = bool
+  default     = false
+}
+
+variable "enable_cost_allocation" {
+  description = "Enable cost allocation to track costs per namespace and label"
+  type        = bool
+  default     = false
 }
 
 variable "cluster_autoscaling" {

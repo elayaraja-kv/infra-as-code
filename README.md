@@ -9,7 +9,9 @@ root.hcl                                              # Root config (path parsin
 modules/
   ├── vpc/                                            # VPC with subnets
   ├── dns-zone/                                       # DNS zones (public/private) with records
-  └── memorystore-valkey/                             # Memorystore for Valkey (Redis-compatible)
+  ├── memorystore-valkey/                             # Memorystore for Valkey (Redis-compatible)
+  ├── gke-private-cluster/                            # GKE private cluster with NAP support
+  └── gke-service-account/                            # Custom service account for GKE nodes
 nz3es/gcp/{env}/{plane}/{project}/{region}/{component}/
   └── terragrunt.hcl
 ```
@@ -23,7 +25,7 @@ Values are auto-parsed from path: `environment`, `plane`, `project`, `region`, `
 Creates a VPC network with multiple subnets.
 
 | Input | Type | Description |
-|-------|------|-------------|
+| ----- | ---- | ----------- |
 | `name` | string | VPC name |
 | `project_id` | string | GCP project ID |
 | `subnets` | map(object) | Map of subnets with region and CIDR |
@@ -33,7 +35,7 @@ Creates a VPC network with multiple subnets.
 Creates public or private DNS zones with records.
 
 | Input | Type | Description |
-|-------|------|-------------|
+| ----- | ---- | ----------- |
 | `name` | string | Zone name |
 | `dns_name` | string | DNS name (e.g., `example.com.`) |
 | `visibility` | string | `public` or `private` |
@@ -45,7 +47,7 @@ Creates public or private DNS zones with records.
 Creates a Memorystore for Valkey instance with PSC connectivity.
 
 | Input | Type | Description |
-|-------|------|-------------|
+| ----- | ---- | ----------- |
 | `instance_id` | string | Instance name |
 | `location` | string | GCP region |
 | `network` | string | VPC network name |
@@ -57,6 +59,73 @@ Creates a Memorystore for Valkey instance with PSC connectivity.
 | `engine_configs` | map(string) | Engine configs (e.g., `maxmemory-policy`) |
 | `service_connection_policies` | map(object) | PSC connection policies |
 
+### GKE Private Cluster (`modules/gke-private-cluster`)
+
+Creates a GKE private cluster using [terraform-google-modules/kubernetes-engine v43.0](https://registry.terraform.io/modules/terraform-google-modules/kubernetes-engine/google/43.0.0). Supports manually defined node pools and Node Auto-Provisioning (NAP).
+
+| Input | Type | Description |
+| ----- | ---- | ----------- |
+| `cluster_name` | string | GKE cluster name |
+| `project_id` | string | GCP project ID |
+| `region` | string | GCP region |
+| `network` | string | VPC network name |
+| `subnetwork` | string | Subnet name |
+| `ip_range_pods` | string | Secondary range name for pods |
+| `ip_range_services` | string | Secondary range name for services |
+| `service_account` | string | Custom service account email for nodes |
+| `enable_private_nodes` | bool | Enable private nodes (no public IPs) |
+| `cluster_autoscaling` | object | NAP configuration (see NAP section below) |
+| `node_pools` | list(map) | Manually defined node pools |
+
+### GKE Service Account (`modules/gke-service-account`)
+
+Creates a custom service account for GKE nodes with the minimum required IAM roles.
+
+| Input | Type | Description |
+| ----- | ---- | ----------- |
+| `project_id` | string | GCP project ID |
+| `name` | string | Service account ID (derived from folder name) |
+| `display_name` | string | Display name |
+| `roles` | list(string) | IAM roles (defaults: logWriter, metricWriter, monitoring.viewer, stackdriver.resourceMetadata.writer, artifactregistry.reader) |
+
+### Node Auto-Provisioning (NAP)
+
+NAP allows GKE to automatically create and delete node pools based on workload requirements, providing autopilot-style scheduling on a Standard cluster.
+
+#### Why NAP is required
+
+Manually defined node pools (e.g. `nz3es-pool` with `e2-medium`) have fixed machine types. When a workload requests resources that don't fit the existing node pool (e.g. a pod requesting 4 vCPUs on `e2-medium` which only has 2 vCPUs), the pod stays in `Pending` state. NAP solves this by automatically provisioning a new node pool with a machine type that fits the workload.
+
+Without NAP, you would need to pre-create node pools for every possible machine type your workloads might need.
+
+#### How NAP works with manual node pools
+
+- **Manual node pools** (e.g. `nz3es-pool`) continue to operate independently with their own autoscaling (`min_count`/`max_count`).
+- **NAP resource limits** (`max_cpu_cores`, `max_memory_gb`) are **cluster-wide** and **include** resources from both manually defined and auto-provisioned node pools.
+- When a pod cannot be scheduled on existing nodes, NAP creates a new node pool with an appropriate machine type. When those nodes are no longer needed, NAP deletes the node pool automatically.
+
+#### Custom service account for NAP
+
+NAP requires a service account to create nodes. By default it uses the project's default compute service account (`{project-number}-compute@developer.gserviceaccount.com`), which may not exist or may lack permissions. To avoid this, pass a custom service account via `cluster_autoscaling.service_account`:
+
+```hcl
+cluster_autoscaling = {
+  enabled             = true
+  autoscaling_profile = "OPTIMIZE_UTILIZATION"
+  max_cpu_cores       = 16
+  max_memory_gb       = 64
+  gpu_resources       = []
+  auto_repair         = true
+  auto_upgrade        = true
+  enable_default_compute_class = true
+  service_account     = dependency.service_account.outputs.email
+}
+```
+
+#### Resource limits example
+
+With `max_cpu_cores = 16` and `max_memory_gb = 64`, the cluster can use up to 16 vCPUs and 64 GB of memory total. These limits are **cluster-wide** and include resources from both manually defined node pools (e.g. `nz3es-pool`) and auto-provisioned node pools.
+
 ## Configuration
 
 ### Region Short Names
@@ -64,7 +133,7 @@ Creates a Memorystore for Valkey instance with PSC connectivity.
 Defined in `root.hcl` for subnet naming:
 
 | Region | Short Name |
-|--------|------------|
+| -------- | ------------ |
 | `australia-southeast1` | `ause1` |
 | `australia-southeast2` | `ause2` |
 | `us-central1` | `usc1` |
@@ -204,10 +273,9 @@ gcloud container clusters get-credentials stg-iac-01 --region australia-southeas
 
 ## Troubleshooting
 
-See [backup/troubleshooting.md](backup/troubleshooting.md) for common issues and solutions.
+See [troubleshooting.md](troubleshooting.md) for common issues and solutions.
 
-gcloud container node-pools list --cluster=stg-iac-01 --region=australia-southeast2 --project=iac-01
+### Default Compute Class
 
-find $HOME/git/infra-as-code -type d -name ".terragrunt-cache" -exec rm -rf {} + 2>/dev/null; echo "Done - removed all .terragrunt-cache directories"
-
-find $HOME/git/infra-as-code -type f -name ".terraform.lock.hcl" -exec rm -rf {} + 2>/dev/null; echo "Done - removed all .terraform.lock.hcl files"
+[Default Compute Class] (<https://docs.cloud.google.com/kubernetes-engine/docs/how-to/run-pods-default-compute-classes>)
+<https://docs.cloud.google.com/kubernetes-engine/docs/how-to/node-auto-provisioning>

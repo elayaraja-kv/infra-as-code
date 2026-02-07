@@ -25,6 +25,8 @@ module "gke" {
   node_pools               = var.node_pools
   node_pools_labels        = var.node_pools_labels
   node_pools_tags          = var.node_pools_tags
+  node_pools_taints        = var.node_pools_taints
+  node_pools_oauth_scopes  = var.node_pools_oauth_scopes
 
   # Cluster config
   kubernetes_version     = var.kubernetes_version
@@ -33,9 +35,23 @@ module "gke" {
   deletion_protection    = var.deletion_protection
   datapath_provider      = var.datapath_provider
 
+  # Security
+  security_posture_mode                  = var.security_posture_mode
+  security_posture_vulnerability_mode    = var.security_posture_vulnerability_mode
+  enable_binary_authorization            = var.enable_binary_authorization
+  enable_confidential_nodes              = var.enable_confidential_nodes
+  insecure_kubelet_readonly_port_enabled = var.insecure_kubelet_readonly_port_enabled
+
+  # Maintenance
+  maintenance_start_time = var.maintenance_start_time
+  maintenance_end_time   = var.maintenance_end_time
+  maintenance_recurrence = var.maintenance_recurrence
+  maintenance_exclusions = var.maintenance_exclusions
+
   # Addons
   http_load_balancing                 = var.http_load_balancing
   horizontal_pod_autoscaling          = var.horizontal_pod_autoscaling
+  enable_vertical_pod_autoscaling     = var.enable_vertical_pod_autoscaling
   gce_pd_csi_driver                   = var.gce_pd_csi_driver
   dns_cache                           = var.dns_cache
   gateway_api_channel                 = var.gateway_api_channel
@@ -44,6 +60,10 @@ module "gke" {
   # Logging & Monitoring
   logging_enabled_components    = var.logging_enabled_components
   monitoring_enabled_components = var.monitoring_enabled_components
+
+  # Best practice
+  enable_intranode_visibility = var.enable_intranode_visibility
+  enable_cost_allocation      = var.enable_cost_allocation
 
   # Autoscaling
   cluster_autoscaling = var.cluster_autoscaling
