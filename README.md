@@ -271,6 +271,26 @@ terragrunt run-all apply
 
 gcloud container clusters get-credentials stg-iac-01 --region australia-southeast2 --project iac-01
 
+## Enable computer class
+
+### Namespace level
+
+```bash
+# Enable on namespace level
+kubectl annotate namespace <namespace> cloud.google.com/default-compute-class=autopilot
+
+# verify: 
+kubectl get namespace <namespace> -o jsonpath='{.metadata.annotations}'
+
+# Remove
+kubectl annotate namespace <namespace> cloud.google.com/default-compute-class-
+```
+
+### workload level
+
+cat nginx_deploy.yml | yq .spec.template.spec.nodeSelector
+cloud.google.com/compute-class: "autopilot"
+
 ## Troubleshooting
 
 See [troubleshooting.md](troubleshooting.md) for common issues and solutions.

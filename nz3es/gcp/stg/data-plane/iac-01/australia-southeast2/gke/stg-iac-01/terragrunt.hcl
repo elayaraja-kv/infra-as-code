@@ -53,14 +53,12 @@ inputs = {
       {
         cidr_block   = "${get_env("GKE_MASTER_CIDR", "125.237.27.134/32")}"
         display_name = "nz3es-home"
-      }
-    ],
-    get_env("GKE_MASTER_CIDR_1", "") != "" ? [
+      },
       {
-        cidr_block   = get_env("GKE_MASTER_CIDR_1", "")
+        cidr_block   = "${get_env("GKE_MASTER_CIDR_1", "10.1.0.0/24")}"
         display_name = "nz3es-additional-1"
-      }
-    ] : [],
+      },
+    ],
     get_env("GKE_MASTER_CIDR_2", "") != "" ? [
       {
         cidr_block   = get_env("GKE_MASTER_CIDR_2", "")
@@ -69,7 +67,7 @@ inputs = {
     ] : [],
   )
 
-  # Node pools
+  # Node pools (default node pool will be removed and replaced with custom node pools)
   remove_default_node_pool = true
   initial_node_count       = 0
 

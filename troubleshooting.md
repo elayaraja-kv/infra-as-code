@@ -42,6 +42,7 @@ gcloud container node-pools describe nz3es-spot-pool --cluster=stg-iac-01 --regi
 ### k8s
 
 k get events --sort-by=.lastTimestamp
+k get events -w --field-selector involvedObject.kind=Pod
 
 ### Re-initialize with upgrade
 
