@@ -11,7 +11,7 @@ modules/
   ├── dns-zone/                                       # DNS zones (public/private) with records
   ├── memorystore-valkey/                             # Memorystore for Valkey (Redis-compatible)
   ├── gke-private-cluster/                            # GKE private cluster with NAP support
-  └── gke-service-account/                            # Custom service account for GKE nodes
+  └── service-account/                                # Generic service account with IAM roles
 nz3es/gcp/{env}/{plane}/{project}/{region}/{component}/
   └── terragrunt.hcl
 ```
@@ -77,16 +77,16 @@ Creates a GKE private cluster using [terraform-google-modules/kubernetes-engine 
 | `cluster_autoscaling` | object | NAP configuration (see NAP section below) |
 | `node_pools` | list(map) | Manually defined node pools |
 
-### GKE Service Account (`modules/gke-service-account`)
+### Service Account (`modules/service-account`)
 
-Creates a custom service account for GKE nodes with the minimum required IAM roles.
+Creates a GCP service account with configurable IAM roles.
 
 | Input | Type | Description |
 | ----- | ---- | ----------- |
 | `project_id` | string | GCP project ID |
 | `name` | string | Service account ID (derived from folder name) |
-| `display_name` | string | Display name |
-| `roles` | list(string) | IAM roles (defaults: logWriter, metricWriter, monitoring.viewer, stackdriver.resourceMetadata.writer, artifactregistry.reader) |
+| `display_name` | string | Display name (defaults to `name`) |
+| `roles` | list(string) | IAM roles to grant (required, no default) |
 
 ### Node Auto-Provisioning (NAP)
 

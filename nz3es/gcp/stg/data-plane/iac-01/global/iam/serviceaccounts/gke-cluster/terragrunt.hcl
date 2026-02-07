@@ -4,7 +4,7 @@ include "root" {
 }
 
 terraform {
-  source = "${get_repo_root()}/modules/gke-service-account"
+  source = "${get_repo_root()}/modules/service-account"
 }
 
 locals {
@@ -16,4 +16,11 @@ inputs = {
   project_id   = include.root.locals.project_id
   name         = local.sa_name
   display_name = "GKE Node Service Account - ${local.sa_name}"
+  roles = [
+    "roles/logging.logWriter",
+    "roles/monitoring.metricWriter",
+    "roles/monitoring.viewer",
+    "roles/stackdriver.resourceMetadata.writer",
+    "roles/artifactregistry.reader",
+  ]
 }
