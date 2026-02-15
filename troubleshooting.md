@@ -31,6 +31,10 @@ find $HOME/git/infra-as-code -type f -name ".terraform.lock.hcl" -exec rm -rf {}
 ###
 
 ```bash
+
+gcloud container clusters list --project=iac-01
+gcloud container clusters describe stg-iac-01 --project=iac-01
+
 gcloud container node-pools list --cluster=stg-iac-01 --region=australia-southeast2 --project=iac-01
 
 gcloud container node-pools describe nz3es-spot-pool --cluster=stg-iac-01 --region=australia-southeast2 --project=iac-01 | yq .config.labels
