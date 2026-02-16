@@ -5,8 +5,9 @@ include "root" {
 
 locals {
   _path_components = split("/", path_relative_to_include())
-  cluster_name     = local._path_components[length(local._path_components) - 1]
-  base_path        = "${get_repo_root()}/${include.root.locals.org}/${include.root.locals.provider}/${include.root.locals.environment}/${include.root.locals.plane}/${include.root.locals.project}"
+  # cluster_name     = local._path_components[length(local._path_components) - 1]
+  cluster_name = "${local._path_components[length(local._path_components) - 1]}-${include.root.locals.region_short}"
+  base_path    = "${get_repo_root()}/${include.root.locals.org}/${include.root.locals.provider}/${include.root.locals.environment}/${include.root.locals.plane}/${include.root.locals.project}"
 }
 
 dependency "network" {
@@ -36,81 +37,74 @@ terraform {
   # Option A: after_hook (recommended)
   # Patches upstream cluster.tf so SA is managed natively in the cluster resource.
   # ---------------------------------------------------------------------------
-  after_hook "patch_compute_class_sa" {
-    commands = ["init"]
-    execute = ["bash", "-c", <<-EOC
-        # Find cluster.tf: search subdirectories first, fall back to current directory
-        CLUSTER_TF=$(find . -name "cluster.tf" -path "*/private-cluster/*" | head -1)
-        CLUSTER_TF="${CLUSTER_TF : -$ ([-f cluster.tf] && echo./ cluster.tf)}"
+  # after_hook "patch_compute_class_sa" {
+  #   commands = ["init"]
+  #   execute = ["bash", "-c", <<-EOC
+  #       # Find cluster.tf: search subdirectories first, fall back to current directory
+  #       CLUSTER_TF=$(find . -name "cluster.tf" -path "*/private-cluster/*" | head -1)
+  #       [ -z "$$CLUSTER_TF" ] && [ -f cluster.tf ] && CLUSTER_TF=./cluster.tf
 
-        if [ -z "$CLUSTER_TF" ]; then
-          echo "No cluster.tf found to patch"
-          exit 0
-        fi
+  #       if [ -z "$$CLUSTER_TF" ]; then
+  #         echo "No cluster.tf found to patch"
+  #         exit 0
+  #       fi
 
-        if grep -q 'enable_default_compute_class.*\[1\]' "$CLUSTER_TF"; then
-          echo "Already patched"
-          exit 0
-        fi
+  #       if grep -q 'enable_default_compute_class.*\[1\]' "$CLUSTER_TF"; then
+  #         echo "Already patched"
+  #         exit 0
+  #       fi
 
-        echo "Patching: $CLUSTER_TF"
-        sed -i.bak 's#for_each = var\.cluster_autoscaling\.enabled ? \[1\] : \[\]#for_each = var.cluster_autoscaling.enabled || lookup(var.cluster_autoscaling, "enable_default_compute_class", false) ? [1] : []#' "$CLUSTER_TF"
-        rm -f "$CLUSTER_TF.bak"
+  #       echo "Patching: $CLUSTER_TF"
+  #       sed -i.bak 's#for_each = var\.cluster_autoscaling\.enabled ? \[1\] : \[\]#for_each = var.cluster_autoscaling.enabled || lookup(var.cluster_autoscaling, "enable_default_compute_class", false) ? [1] : []#' "$CLUSTER_TF"
 
-        if grep -q 'enable_default_compute_class.*\[1\]' "$CLUSTER_TF"; then
-          echo "Patch applied successfully"
-        else
-          echo "Patch failed"
-          exit 1
-        fi
-      EOC
-    ]
-  }
+  #       if grep -q 'enable_default_compute_class.*\[1\]' "$CLUSTER_TF"; then
+  #         rm -f "$CLUSTER_TF.bak"
+  #         echo "Patch applied successfully"
+  #       else
+  #         echo "Patch failed"
+  #         exit 1
+  #       fi
+  #     EOC
+  #   ]
+  # }
 }
 
-## ---------------------------------------------------------------------------
-## Option B: generate block (alternative)
-## Sets SA via REST API after cluster creation. Uncomment to use instead of
-## Option A (comment out the after_hook above if using this).
-## ---------------------------------------------------------------------------
-# generate "compute_class_sa" {
-#   path      = "compute_class_sa.tf"
-#   if_exists = "overwrite_terragrunt"
-#   contents  = <<-EOF
-#     resource "null_resource" "compute_class_service_account" {
-#       count = (!var.cluster_autoscaling.enabled &&
-#         lookup(var.cluster_autoscaling, "enable_default_compute_class", false) &&
-#         var.service_account != "") ? 1 : 0
-#
-#       triggers = {
-#         service_account = var.service_account
-#         cluster_name    = module.gke.name
-#       }
-#
-#       provisioner "local-exec" {
-#         command = <<-EOT
-#           TOKEN=$(gcloud auth print-access-token) && \
-#           BODY='{"update":{"desiredClusterAutoscaling":{"autoprovisioningNodePoolDefaults":{"serviceAccount":"$${var.service_account}","oauthScopes":["https://www.googleapis.com/auth/cloud-platform"]}}}}' && \
-#           RESPONSE=$(curl -s -w "\n%%{http_code}" -X PUT \
-#             -H "Authorization: Bearer $$TOKEN" \
-#             -H "Content-Type: application/json" \
-#             -d "$$BODY" \
-#             "https://container.googleapis.com/v1/projects/$${var.project_id}/locations/$${var.region}/clusters/$${module.gke.name}") && \
-#           HTTP_CODE=$(echo "$$RESPONSE" | tail -1) && \
-#           BODY_RESP=$(echo "$$RESPONSE" | sed '$$d') && \
-#           echo "$$BODY_RESP" && \
-#           if [ "$$HTTP_CODE" -ge 200 ] && [ "$$HTTP_CODE" -lt 300 ]; then
-#             echo "Success: HTTP $$HTTP_CODE"
-#           else
-#             echo "Failed: HTTP $$HTTP_CODE" && exit 1
-#           fi
-#         EOT
-#       }
-#
-#       depends_on = [module.gke]
-#     }
-#   EOF
-# }
+# ---------------------------------------------------------------------------
+# Option B: generate block (alternative)
+# Sets SA via REST API after cluster creation. Uncomment to use instead of
+# Option A (comment out the after_hook above if using this).
+# ---------------------------------------------------------------------------
+generate "compute_class_sa" {
+  path      = "compute_class_sa.tf"
+  if_exists = "overwrite_terragrunt"
+  contents  = <<-EOF
+    resource "null_resource" "compute_class_service_account" {
+      count = (!var.cluster_autoscaling.enabled &&
+        lookup(var.cluster_autoscaling, "enable_default_compute_class", false) &&
+        var.service_account != "") ? 1 : 0
+
+      triggers = {
+        service_account = var.service_account
+        cluster_name    = module.gke.name
+      }
+
+      provisioner "local-exec" {
+        command = <<-EOT
+          TOKEN=$(gcloud auth print-access-token) && \
+          curl -sf -X PUT \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d '{"update":{"desiredClusterAutoscaling":{"autoprovisioningNodePoolDefaults":{"serviceAccount":"$${var.service_account}","oauthScopes":["https://www.googleapis.com/auth/cloud-platform"]}}}}' \
+            "https://container.googleapis.com/v1/projects/$${var.project_id}/locations/$${var.region}/clusters/$${module.gke.name}" \
+            && echo "SA patched successfully" \
+            || (echo "Failed to patch SA" && exit 1)
+        EOT
+      }
+
+      depends_on = [module.gke]
+    }
+  EOF
+}
 
 inputs = {
   project_id = include.root.locals.project_id
