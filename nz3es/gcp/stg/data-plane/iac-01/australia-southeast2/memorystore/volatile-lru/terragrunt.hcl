@@ -4,7 +4,7 @@ include "root" {
 }
 
 include "memorystore_valkey" {
-  path = "${get_repo_root()}/modules/memorystore-valkey/terragrunt.hcl"
+  path = "${get_repo_root()}/modules/gcp/memorystore-valkey/terragrunt.hcl"
 }
 
 dependency "scp" {

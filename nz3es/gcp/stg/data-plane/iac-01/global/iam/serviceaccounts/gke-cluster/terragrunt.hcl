@@ -4,7 +4,7 @@ include "root" {
 }
 
 include "service_account" {
-  path = "${get_repo_root()}/modules/service-account/terragrunt.hcl"
+  path = "${get_repo_root()}/modules/gcp/service-account/terragrunt.hcl"
 }
 
 locals {

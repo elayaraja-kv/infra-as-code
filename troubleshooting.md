@@ -2,21 +2,53 @@
 
 ## Terragrunt / Terraform
 
-### Initialize and validate
+### Terragrunt v0.99+ command changes
+
+Flags and commands were renamed in v0.99. Old flags are no longer recognised.
+
+| Old (pre-v0.99) | New (v0.99+) |
+| --- | --- |
+| `terragrunt run-all apply` | `terragrunt run --all apply` |
+| `terragrunt run-all plan` | `terragrunt run --all plan` |
+| `terragrunt run-all destroy` | `terragrunt run --all destroy` |
+| `--terragrunt-working-dir <path>` | `--working-dir <path>` |
+| `--terragrunt-non-interactive` | `--non-interactive` |
+
+### Apply / plan a single unit
 
 ```bash
-cd nz3es/gcp/stg/data-plane/iac-01/australia-southeast2/memorystore/volatile-lru
-terragrunt init
-terragrunt validate
-terragrunt plan
+# From repo root
+terragrunt apply --working-dir <path/to/unit>
+terragrunt plan  --working-dir <path/to/unit>
+
+# Example
+terragrunt apply --working-dir nz3es/gcp/stg/data-plane/iac-01/global/iam/serviceaccounts/gke-cluster
+```
+
+### Apply / plan across all units in a folder
+
+```bash
+# From repo root
+terragrunt run --all apply --working-dir <path/to/folder>
+terragrunt run --all plan  --working-dir <path/to/folder>
+
+# Example — all dns-zone units
+terragrunt run --all apply --working-dir nz3es/gcp/stg/data-plane/iac-01/global/dns-zone
+```
+
+### Initialize and validate a single unit
+
+```bash
+terragrunt init     --working-dir <path/to/unit>
+terragrunt validate --working-dir <path/to/unit>
 ```
 
 ### Run across all modules
 
 ```bash
 cd nz3es/gcp/stg/data-plane/iac-01
-terragrunt run-all init
-terragrunt run-all plan
+terragrunt run --all init
+terragrunt run --all plan
 ```
 
 ### Clear terragrunt cache

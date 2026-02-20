@@ -4,7 +4,7 @@ include "root" {
 }
 
 include "network" {
-  path = "${get_repo_root()}/modules/network/terragrunt.hcl"
+  path = "${get_repo_root()}/modules/gcp/network/terragrunt.hcl"
 }
 
 inputs = {
@@ -13,14 +13,16 @@ inputs = {
 
   subnets = [
     {
-      subnet_name   = "ause2"
-      subnet_ip     = "10.1.0.0/24"
-      subnet_region = "australia-southeast2"
+      subnet_name           = "ause2"
+      subnet_ip             = "10.1.0.0/24"
+      subnet_region         = "australia-southeast2"
+      subnet_private_access = true
     },
     {
-      subnet_name   = "ause1"
-      subnet_ip     = "10.2.0.0/24"
-      subnet_region = "australia-southeast1"
+      subnet_name           = "ause1"
+      subnet_ip             = "10.2.0.0/24"
+      subnet_region         = "australia-southeast1"
+      subnet_private_access = true
     },
   ]
 

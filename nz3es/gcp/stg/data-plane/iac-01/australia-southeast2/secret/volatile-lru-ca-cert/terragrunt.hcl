@@ -4,7 +4,7 @@ include "root" {
 }
 
 include "secret_manager" {
-  path = "${get_repo_root()}/modules/secret-manager/terragrunt.hcl"
+  path = "${get_repo_root()}/modules/gcp/secret-manager/terragrunt.hcl"
 }
 
 dependency "valkey" {

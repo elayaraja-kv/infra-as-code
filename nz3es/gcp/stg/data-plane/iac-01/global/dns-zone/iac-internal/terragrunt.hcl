@@ -4,7 +4,7 @@ include "root" {
 }
 
 include "dns_zone" {
-  path = "${get_repo_root()}/modules/dns-zone/terragrunt.hcl"
+  path = "${get_repo_root()}/modules/gcp/dns-zone/terragrunt.hcl"
 }
 
 dependency "network" {

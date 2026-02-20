@@ -4,7 +4,7 @@ include "root" {
 }
 
 include "gke" {
-  path = "${get_repo_root()}/modules/gke-private-cluster/terragrunt.hcl"
+  path = "${get_repo_root()}/modules/gcp/gke-private-cluster/terragrunt.hcl"
 }
 
 locals {
@@ -110,7 +110,7 @@ generate "compute_class_sa" {
         EOT
       }
 
-      depends_on = [google_container_cluster.primary]
+      depends_on = [google_container_cluster.primary, google_container_node_pool.pools]
     }
   EOF
 }

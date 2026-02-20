@@ -4,7 +4,7 @@ include "root" {
 }
 
 terraform {
-  source = "../../../../../../../../modules/service-connection-policy"
+  source = "../../../../../../../../modules/gcp/service-connection-policy"
 }
 
 inputs = {
