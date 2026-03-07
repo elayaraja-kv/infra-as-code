@@ -1,0 +1,25 @@
+name: Runner Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: [self-hosted, linux, stg, vm]
+    steps:
+      - name: Runner info
+        run: |
+          echo "Hostname: $(hostname)"
+          echo "User: $(whoami)"
+          echo "OS: $(uname -a)"
+
+      - name: Tool versions
+        run: |
+          terraform version
+          terragrunt --version
+          gcloud version --format=json | python3 -c "import sys,json; v=json.load(sys.stdin); print('gcloud:', v.get('Google Cloud SDK','?'))"
+          docker --version
+          kubectl version --client --short 2>/dev/null || kubectl version --client
+
+      - name: GCP auth check
+        run: gcloud auth list

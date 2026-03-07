@@ -24,6 +24,12 @@ inputs = {
       subnet_region         = "australia-southeast1"
       subnet_private_access = true
     },
+    {
+      subnet_name           = "compute-ause2"
+      subnet_ip             = "10.4.0.0/24"
+      subnet_region         = "australia-southeast2"
+      subnet_private_access = true
+    },
   ]
 
   secondary_ranges = {
