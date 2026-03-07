@@ -1,0 +1,77 @@
+name: Terragrunt Validate
+
+on:
+  push:
+    paths:
+      - "**/*.tf"
+      - "**/*.hcl"
+      - ".github/workflows/**"
+      - "modules/**"
+      - "nz3es/**"
+
+env:
+  TF_CLI_DISABLE_UPDATE_CHECK: "1"
+  TG_CLI_DISABLE_UPDATE_CHECK: "1"
+  TF_CLI_ARGS_init: "-backend=false"
+
+jobs:
+  validate:
+    name: Validate Changed Units
+    runs-on: [self-hosted, linux, stg, vm]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed units
+        id: detect
+        run: |
+          BASE="${{ github.event.before }}"
+          if [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+            BASE="HEAD~1"
+          fi
+
+          CHANGED=$(git diff --name-only "$BASE" "${{ github.sha }}" -- '*.tf' '*.hcl' 2>/dev/null || true)
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          MODULES_CHANGED=false
+          UNITS=""
+
+          while IFS= read -r f; do
+            [ -z "$f" ] && continue
+            dir=$(dirname "$f")
+            if [[ "$dir" == modules/* ]]; then
+              MODULES_CHANGED=true
+            elif [ -f "$dir/terragrunt.hcl" ]; then
+              UNITS="$UNITS $dir"
+            fi
+          done <<< "$CHANGED"
+
+          UNITS=$(echo "$UNITS" | tr ' ' '\n' | grep -v '^$' | sort -u | tr '\n' ' ' | xargs)
+          echo "units=$UNITS" >> "$GITHUB_OUTPUT"
+          echo "modules_changed=$MODULES_CHANGED" >> "$GITHUB_OUTPUT"
+          echo "Detected units  : [$UNITS]"
+          echo "Modules changed : $MODULES_CHANGED"
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive
+
+      - name: Terragrunt HCL validate
+        run: terragrunt hcl validate
+
+      - name: Validate changed units
+        if: steps.detect.outputs.units != ''
+        run: |
+          for unit in ${{ steps.detect.outputs.units }}; do
+            echo "=== Validating: $unit ==="
+            (cd "$unit" && terragrunt init && terragrunt validate)
+          done
+
+      - name: Validate all units (module changed)
+        if: steps.detect.outputs.modules_changed == 'true'
+        run: |
+          echo "Module change detected — running hcl validate across all units"
+          terragrunt hcl validate

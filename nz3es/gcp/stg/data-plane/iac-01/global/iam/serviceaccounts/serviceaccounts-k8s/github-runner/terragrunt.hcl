@@ -8,9 +8,9 @@ include "service_account" {
 }
 
 locals {
-  sa_name    = basename(get_terragrunt_dir())  # "github-runner"
-  namespace  = "arc-runners"                   # ARC runner scale set namespace
-  ksa_name   = "nz3es-runner"                  # ARC scale set name = KSA name
+  sa_name   = basename(get_terragrunt_dir()) # "github-runner"
+  namespace = "arc-runners"                  # ARC runner scale set namespace
+  ksa_name  = "nz3es-runner"                 # ARC scale set name = KSA name
 }
 
 # Workload Identity binding: ARC runner KSA → GCP SA
