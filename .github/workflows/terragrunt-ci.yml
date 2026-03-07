@@ -12,6 +12,7 @@ on:
 env:
   TF_CLI_DISABLE_UPDATE_CHECK: "1"
   TG_CLI_DISABLE_UPDATE_CHECK: "1"
+  TF_CLI_ARGS_init: "-backend=false"
 
 jobs:
   validate:
@@ -66,7 +67,7 @@ jobs:
         run: |
           for unit in ${{ steps.detect.outputs.units }}; do
             echo "=== Validating: $unit ==="
-            (cd "$unit" && terragrunt init -backend=false && terragrunt validate)
+            (cd "$unit" && terragrunt init && terragrunt validate)
           done
 
       - name: Validate all units (module changed)

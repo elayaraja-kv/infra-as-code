@@ -53,4 +53,3 @@ inputs = {
   # No direct project roles — runner impersonates nz3es-automation-sa for GCP access.
   project_roles = []
 }
-
