@@ -259,6 +259,7 @@ terragrunt run-all apply
         "roles/iam.serviceAccountAdmin"
         "roles/resourcemanager.projectIamAdmin"
         "roles/privateca.admin"
+        "roles/compute.admin"
     )
 
     # Loop through each role and assign it
