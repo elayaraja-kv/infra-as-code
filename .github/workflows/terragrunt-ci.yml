@@ -1,6 +1,6 @@
 name: Terragrunt Validate
 
-on:
+"on":
   push:
     paths:
       - "**/*.tf"
