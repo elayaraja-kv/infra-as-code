@@ -1,0 +1,78 @@
+name: Security Scan
+
+"on":
+  pull_request:
+    paths:
+      - "**/*.tf"
+      - "**/*.hcl"
+      - "modules/**"
+      - "nz3es/**"
+  push:
+    branches:
+      - main
+    paths:
+      - "**/*.tf"
+      - "**/*.hcl"
+      - "modules/**"
+      - "nz3es/**"
+
+jobs:
+  trivy:
+    name: Trivy IaC Scan
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Trivy
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh \
+            | sh -s -- -b /usr/local/bin
+
+      - name: Run Trivy (IaC config scan)
+        run: |
+          trivy config . \
+            --format sarif \
+            --output trivy-results.sarif \
+            --severity CRITICAL,HIGH,MEDIUM \
+            --exit-code 0
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('trivy-results.sarif') != ''
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy
+
+  checkov:
+    name: Checkov IaC Scan
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Checkov
+        uses: bridgecrewio/checkov-action@v12
+        with:
+          directory: .
+          framework: terraform
+          output_format: sarif
+          output_file_path: checkov-results.sarif
+          soft_fail: true
+
+      - name: Upload Checkov results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always() && hashFiles('checkov-results.sarif') != ''
+        with:
+          sarif_file: checkov-results.sarif
+          category: checkov
