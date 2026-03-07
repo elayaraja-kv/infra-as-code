@@ -20,6 +20,9 @@ jobs:
     runs-on: [self-hosted, linux, stg, vm]
 
     steps:
+      - name: Configure git
+        run: git config --global credential.helper ""
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
