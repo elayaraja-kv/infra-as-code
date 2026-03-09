@@ -29,11 +29,17 @@ spec:
         config.linkerd.io/proxy-cpu-limit: "100m"
         config.linkerd.io/proxy-memory-limit: "250Mi"
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: nginx-autopilot
           image: nginx:1.14.2
           ports:
-            - containerPort: 80
+            - containerPort: 8080
           resources:
             limits:
               cpu: "100m"
@@ -41,5 +47,21 @@ spec:
             requests:
               cpu: "100m"
               memory: "128Mi"
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - name: cache
+              mountPath: /var/cache/nginx
+            - name: run
+              mountPath: /var/run
+      volumes:
+        - name: cache
+          emptyDir: {}
+        - name: run
+          emptyDir: {}
       nodeSelector: # This is not required if the label has added to namespace level
         cloud.google.com/compute-class: "autopilot"
