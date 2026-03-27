@@ -15,7 +15,7 @@
 #     projects/iac-01/secrets/github-runner-app-key
 
 include "root" {
-  path   = find_in_parent_folders("root.hcl")
+  path   = find_in_parent_folders("root-gcp.hcl")
   expose = true
 }
 

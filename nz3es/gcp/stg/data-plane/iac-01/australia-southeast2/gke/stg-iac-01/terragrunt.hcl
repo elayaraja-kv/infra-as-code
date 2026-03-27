@@ -1,5 +1,5 @@
 include "root" {
-  path   = find_in_parent_folders("root.hcl")
+  path   = find_in_parent_folders("root-gcp.hcl")
   expose = true
 }
 
@@ -130,10 +130,6 @@ inputs = {
   ip_range_services        = "gke-services"
   additional_ip_range_pods = ["gke-pods-2"]
 
-  # Private cluster
-  enable_private_nodes    = true
-  enable_private_endpoint = false
-
   master_authorized_networks = concat(
     [
       {
@@ -152,10 +148,6 @@ inputs = {
       }
     ] : [],
   )
-
-  # Node pools (default node pool will be removed and replaced with custom node pools)
-  remove_default_node_pool = true
-  initial_node_count       = 0
 
   cluster_autoscaling = {
     enabled                      = false
@@ -180,6 +172,7 @@ inputs = {
       image_type         = "COS_CONTAINERD"
       auto_repair        = true
       auto_upgrade       = true
+      max_pods_per_node  = 64
     },
     {
       name               = "nz3es-spot-pool"
@@ -195,6 +188,7 @@ inputs = {
       auto_repair        = true
       auto_upgrade       = true
       spot               = true
+      max_pods_per_node  = 64
     }
   ]
 
