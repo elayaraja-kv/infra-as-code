@@ -11,4 +11,9 @@ inputs = {
   release_channel          = "REGULAR"
   deletion_protection      = true
   datapath_provider        = "ADVANCED_DATAPATH"
+  # Node pools (default node pool will be removed and replaced with custom node pools)
+  remove_default_node_pool  = true
+  initial_node_count        = 0
+  default_max_pods_per_node = 32
+  max_pods_per_node         = 32
 }

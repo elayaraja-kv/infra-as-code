@@ -9,7 +9,7 @@
 # See k8s-as-code/addons/linkerd/README.md for full Option B setup.
 
 include "root" {
-  path   = find_in_parent_folders("root.hcl")
+  path   = find_in_parent_folders("root-gcp.hcl")
   expose = true
 }
 
