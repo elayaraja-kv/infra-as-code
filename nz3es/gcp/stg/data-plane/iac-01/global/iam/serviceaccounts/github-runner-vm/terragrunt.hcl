@@ -18,7 +18,7 @@ generate "automation_sa_impersonation" {
   if_exists = "overwrite_terragrunt"
   contents  = <<-EOF
     resource "google_service_account_iam_member" "impersonate_automation_sa" {
-      service_account_id = "projects/${include.root.locals.project_id}/serviceAccounts/nz3es-automation-sa@${include.root.locals.project_id}.iam.gserviceaccount.com"
+      service_account_id = "projects/${include.root.locals.state_project_id}/serviceAccounts/nz3es-automation-sa@${include.root.locals.state_project_id}.iam.gserviceaccount.com"
       role               = "roles/iam.serviceAccountTokenCreator"
       member             = "serviceAccount:${local.sa_name}@${include.root.locals.project_id}.iam.gserviceaccount.com"
 

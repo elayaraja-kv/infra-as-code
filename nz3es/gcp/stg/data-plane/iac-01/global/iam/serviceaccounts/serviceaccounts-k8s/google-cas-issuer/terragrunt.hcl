@@ -31,9 +31,11 @@ generate "ca_pool_iam" {
   path      = "ca_pool_iam.tf"
   if_exists = "overwrite_terragrunt"
   contents  = <<-EOF
+    variable "ca_pool_id" {}
+
     resource "google_privateca_ca_pool_iam_member" "cas_requester" {
       project  = "${include.root.locals.project_id}"
-      ca_pool  = "${dependency.private_ca.outputs.ca_pool_id}"
+      ca_pool  = var.ca_pool_id
       role     = "roles/privateca.certificateRequester"
       member   = "serviceAccount:${local.sa_name}@${include.root.locals.project_id}.iam.gserviceaccount.com"
     }
@@ -44,6 +46,7 @@ inputs = {
   name       = local.sa_name
   namespace  = local.namespace
   project_id = include.root.locals.project_id
+  ca_pool_id = dependency.private_ca.outputs.ca_pool_id
 
   # The Helm chart creates the KSA named "cert-manager-google-cas-issuer" (not sa_name).
   # k8s_sa_name overrides the WI binding to use the correct KSA.
