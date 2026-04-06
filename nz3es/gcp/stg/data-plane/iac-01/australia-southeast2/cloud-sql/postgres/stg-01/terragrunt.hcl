@@ -27,5 +27,35 @@ inputs = {
     psc_allowed_consumer_projects                 = [include.root.locals.project_id]
   }
 
+  database_flags = [
+    {
+      name  = "max_connections"
+      value = "100"
+    }
+  ]
+
   user_labels = include.root.locals.labels
+
+  additional_databases = [
+    {
+      name      = "users"
+      charset   = "UTF8"
+      collation = "en_US.UTF8"
+    }
+  ]
+
+  additional_users = [
+    {
+      name            = "users-owner"
+      password        = null
+      random_password = true
+      type            = "BUILT_IN"
+    },
+    {
+      name            = "users-reader"
+      password        = null
+      random_password = true
+      type            = "BUILT_IN"
+    }
+  ]
 }
