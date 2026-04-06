@@ -130,24 +130,24 @@ inputs = {
   ip_range_services        = "gke-services"
   additional_ip_range_pods = ["gke-pods-2"]
 
-  master_authorized_networks = concat(
-    [
-      {
-        cidr_block   = "${get_env("GKE_MASTER_CIDR", "125.237.43.73/32")}"
-        display_name = "nz3es-home"
-      },
-      {
-        cidr_block   = "${get_env("GKE_MASTER_CIDR_1", "10.1.0.0/24")}"
-        display_name = "nz3es-additional-1"
-      },
-    ],
-    get_env("GKE_MASTER_CIDR_2", "") != "" ? [
-      {
-        cidr_block   = get_env("GKE_MASTER_CIDR_2", "")
-        display_name = "nz3es-additional-2"
-      }
-    ] : [],
-  )
+  # master_authorized_networks = concat(
+  #   [
+  #     {
+  #       cidr_block   = "${get_env("GKE_MASTER_CIDR", "125.237.43.73/32")}"
+  #       display_name = "nz3es-home"
+  #     },
+  #     {
+  #       cidr_block   = "${get_env("GKE_MASTER_CIDR_1", "10.1.0.0/24")}"
+  #       display_name = "nz3es-additional-1"
+  #     },
+  #   ],
+  #   get_env("GKE_MASTER_CIDR_2", "") != "" ? [
+  #     {
+  #       cidr_block   = get_env("GKE_MASTER_CIDR_2", "")
+  #       display_name = "nz3es-additional-2"
+  #     }
+  #   ] : [],
+  # )
 
   cluster_autoscaling = {
     enabled                      = false
@@ -160,7 +160,7 @@ inputs = {
 
   node_pools = [
     {
-      name               = "nz3es-pool"
+      name               = "nz3es-default-pool"
       machine_type       = "e2-medium"
       initial_node_count = 0
       total_min_count    = 0
@@ -216,6 +216,10 @@ inputs = {
   cluster_resource_labels = include.root.locals.labels
   deletion_protection     = false # Set to true for production
   datapath_provider       = "ADVANCED_DATAPATH"
+
+  enable_private_endpoint    = true
+  dns_allow_external_traffic = true
+  ip_endpoints_enabled       = true
 
   # Security
   security_posture_mode                  = "BASIC"
