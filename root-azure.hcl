@@ -9,13 +9,13 @@
 locals {
   # Parse path: {org}/{provider}/{env}/{plane}/{project}/{region}/{component}
   _path_components = split("/", path_relative_to_include())
-  org         = local._path_components[0]
-  provider    = local._path_components[1]
-  environment = local._path_components[2]
-  plane       = local._path_components[3]
-  project     = local._path_components[4]
-  region      = local._path_components[5]
-  component   = local._path_components[6]
+  org              = local._path_components[0]
+  provider         = local._path_components[1]
+  environment      = local._path_components[2]
+  plane            = local._path_components[3]
+  project          = local._path_components[4]
+  region           = local._path_components[5]
+  component        = local._path_components[6]
 
   # Azure region short-name mapping
   region_short_names = {

@@ -8,10 +8,10 @@ include "workload_identity" {
 }
 
 locals {
-  sa_name      = basename(get_terragrunt_dir())  # GCP SA name: "google-cas-issuer"
-  namespace    = basename(get_terragrunt_dir())  # k8s namespace: "google-cas-issuer"
-  k8s_sa_name  = "cert-manager-google-cas-issuer"  # actual KSA name created by the Helm chart
-  base_path = "${get_repo_root()}/${include.root.locals.org}/${include.root.locals.provider}/${include.root.locals.environment}/${include.root.locals.plane}/${include.root.locals.project}"
+  sa_name     = basename(get_terragrunt_dir())   # GCP SA name: "google-cas-issuer"
+  namespace   = basename(get_terragrunt_dir())   # k8s namespace: "google-cas-issuer"
+  k8s_sa_name = "cert-manager-google-cas-issuer" # actual KSA name created by the Helm chart
+  base_path   = "${get_repo_root()}/${include.root.locals.org}/${include.root.locals.provider}/${include.root.locals.environment}/${include.root.locals.plane}/${include.root.locals.project}"
 }
 
 dependency "private_ca" {
@@ -31,9 +31,11 @@ generate "ca_pool_iam" {
   path      = "ca_pool_iam.tf"
   if_exists = "overwrite_terragrunt"
   contents  = <<-EOF
+    variable "ca_pool_id" {}
+
     resource "google_privateca_ca_pool_iam_member" "cas_requester" {
       project  = "${include.root.locals.project_id}"
-      ca_pool  = "${dependency.private_ca.outputs.ca_pool_id}"
+      ca_pool  = var.ca_pool_id
       role     = "roles/privateca.certificateRequester"
       member   = "serviceAccount:${local.sa_name}@${include.root.locals.project_id}.iam.gserviceaccount.com"
     }
@@ -44,6 +46,7 @@ inputs = {
   name       = local.sa_name
   namespace  = local.namespace
   project_id = include.root.locals.project_id
+  ca_pool_id = dependency.private_ca.outputs.ca_pool_id
 
   # The Helm chart creates the KSA named "cert-manager-google-cas-issuer" (not sa_name).
   # k8s_sa_name overrides the WI binding to use the correct KSA.

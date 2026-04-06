@@ -4,8 +4,9 @@
 
 
 locals {
-  project_id = get_env("GCP_PROJECT", "default-project")
-  gcp_region = get_env("GCP_REGION", "australia-southeast2")
+  # State bucket project (nz3es-infra-mgmt) — set via GCP_PROJECT env var
+  state_project_id = get_env("GCP_PROJECT", "nz3es-infra-mgmt")
+  gcp_region       = get_env("GCP_REGION", "australia-southeast2")
 
   # Parse path: {org}/{provider}/{env}/{plane}/{project}/{region}/{component}
   _path_components = split("/", path_relative_to_include())
@@ -16,6 +17,9 @@ locals {
   project          = local._path_components[4]
   region           = local._path_components[5]
   component        = local._path_components[6]
+
+  # Resource project — always derived from path (iac-01, iac-02, etc.)
+  project_id = local.project
 
   # Region short-name mapping (centralized)
   region_short_names = {
@@ -62,8 +66,9 @@ remote_state {
     if_exists = "overwrite" # or "skip", "error"
   }
   config = {
-    bucket = "nz3es-tf-state-iac"
-    prefix = "infra-as-code/${path_relative_to_include()}"
+    bucket  = "nz3es-state"
+    prefix  = "infra-as-code/${path_relative_to_include()}"
+    project = local.state_project_id # nz3es-infra-mgmt — project hosting the state bucket
   }
 }
 

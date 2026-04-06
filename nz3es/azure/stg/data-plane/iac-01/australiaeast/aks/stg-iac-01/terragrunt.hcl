@@ -50,7 +50,7 @@ inputs = {
   cluster_name        = local.cluster_name
   # prefix is used by the upstream module to name internal resources (e.g. log analytics workspace).
   # Must be non-empty even when oms_agent_enabled = false — module has an unconditional precondition.
-  prefix               = local.cluster_name
+  prefix         = local.cluster_name
   vnet_subnet_id = dependency.network.outputs.vnet_subnets_name_id["snet-aks-nodes"]
   identity_ids   = [dependency.identity.outputs.id]
 

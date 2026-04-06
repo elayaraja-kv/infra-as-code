@@ -2,95 +2,148 @@
 
 Infrastructure as Code on GCP using Terragrunt.
 
+## GCP Org & Project Setup
+
+One-time setup to create the management folder, `infra-mgmt` project, and link billing. Run as an org admin.
+
+```text
+3es.nz (org)
+├── management (folder)
+│   └── infra-mgmt (project)  ← automation SA + Terraform state bucket
+└── learning (folder)
+    ├── iac-01
+    └── iac-02
+```
+
+```bash
+# Org: 3es.nz (762797842350)
+# Billing: NZ3ES (012284-9A8CD4-C9DAE0) — linked to a separate Google account
+ORG_ID="762797842350"
+BILLING_ACCOUNT="012284-9A8CD4-C9DAE0"
+
+# Create management folder under org
+gcloud resource-manager folders create \
+    --display-name="management" \
+    --organization="$ORG_ID"
+
+# List folders to get management folder ID
+gcloud resource-manager folders list --organization="$ORG_ID"
+# management    organizations/762797842350  585412383275
+
+# Create nz3es-infra-mgmtt project under management folder
+gcloud projects create nz3es-infra-mgmt \
+    --name="nz3es-infra-mgmt" \
+    --folder=585412383275
+
+# Link infra-mgmt project to billing account
+gcloud billing projects link nz3es-infra-mgmt \
+    --billing-account="$BILLING_ACCOUNT"
+```
+
 ## Prerequisites (bootstrap)
 
-- Enable API
+SA and state bucket live in `nz3es-infra-mgmt`. The SA is granted roles on `iac-01` and `iac-02`.
 
-    ```bash
-    gcloud services enable cloudresourcemanager.googleapis.com --project=iac-01
-    gcloud services enable config.googleapis.com --project=iac-01
-    gcloud services enable cloudquotas.googleapis.com --project=iac-01
-    ```
+```bash
+MGMT_PROJECT="nz3es-infra-mgmt"
+WORKLOAD_PROJECTS=("iac-01" "iac-02")
+SA_NAME="nz3es-automation-sa"
+SA_EMAIL="${SA_NAME}@${MGMT_PROJECT}.iam.gserviceaccount.com"
+REGION="australia-southeast2"
+```
 
-- Create a storage account
+- Enable bootstrap APIs on all projects
 
-    ```bash
-    gcloud --project=iac-01 storage buckets create gs://nz3es-tf-state-iac --location=australia-southeast2
-    ```
+```bash
+for PROJECT_ID in "$MGMT_PROJECT" "${WORKLOAD_PROJECTS[@]}"; do
+    gcloud services enable cloudresourcemanager.googleapis.com --project="$PROJECT_ID"
+    gcloud services enable config.googleapis.com --project="$PROJECT_ID"
+    gcloud services enable cloudquotas.googleapis.com --project="$PROJECT_ID"
+    gcloud services enable serviceusage.googleapis.com --project="$PROJECT_ID"
+done
+```
 
-- Enable versioning on bucket
+- Create Terraform state bucket in `nz3es-infra-mgmt`
 
-    ```bash
-    gcloud storage buckets update gs://nz3es-tf-state-iac --enable-versioning
-    ```
+```bash
+gcloud storage buckets create gs://nz3es-state \
+    --location="$REGION" \
+    --project="$MGMT_PROJECT"
+gcloud storage buckets update gs://nz3es-state --versioning
+```
 
-- Create a service account
+- Create automation SA in `nz3es-infra-mgmt`
 
-    ```bash
-    gcloud iam service-accounts create nz3es-automation-sa \
-        --description="SA for automation" \
-        --display-name="nz3es-automation-sa" \
-        --project=iac-01
-    ```
+```bash
+gcloud iam service-accounts create "$SA_NAME" \
+    --description="SA for automation" \
+    --display-name="$SA_NAME" \
+    --project="$MGMT_PROJECT"
+```
 
-- Create a service account key
+- Create SA key
 
-    ```bash
-    gcloud iam service-accounts keys create nz3es-automation-sa-key.json \
-        --iam-account=<nz3es-automation-sa@iac-01.iam.gserviceaccount.com> \
-        --project=iac-01
-    ```
+```bash
+gcloud iam service-accounts keys create "${SA_NAME}.json" \
+    --iam-account="$SA_EMAIL" \
+    --project="$MGMT_PROJECT"
+```
 
-- Enable Infra Manager executes Terraform using the identity of this service account.
-  - <https://docs.cloud.google.com/infrastructure-manager/docs/configure-service-account>
+- Grant SA access to state bucket
 
-    ```bash
-    gcloud projects add-iam-policy-binding iac-01 \
-        --member="serviceAccount:nz3es-automation-sa@iac-01.iam.gserviceaccount.com" \
-        --role="roles/config.agent" \
-        --project=iac-01
-    ```
+```bash
+gcloud storage buckets add-iam-policy-binding gs://nz3es-state \
+    --member="serviceAccount:${SA_EMAIL}" \
+    --role="roles/storage.objectAdmin"
+```
 
-- Adding required roles to the service account
+- Grant SA permission to manage IAM on its own project (`nz3es-infra-mgmt`)
+  (required so Terraform can set IAM bindings on service accounts in the management project)
 
-    ```bash
-    #!/bin/bash
+```bash
+gcloud projects add-iam-policy-binding "$MGMT_PROJECT" \
+    --member="serviceAccount:${SA_EMAIL}" \
+    --role="roles/iam.serviceAccountAdmin"
+```
 
-    # Define variables
-    # assign "roles/owner" or else assign below roles
-    PROJECT_ID="iac-01"
-    MEMBER="serviceAccount:nz3es-automation-sa@iac-01.iam.gserviceaccount.com"
-    ROLES=(
-        "roles/compute.networkAdmin"
-        "roles/storage.admin"
-        "roles/serviceusage.serviceUsageAdmin"
-        "roles/dns.admin"
-        "roles/iam.serviceAccountUser"
-        "roles/memorystore.admin"
-        "roles/networkconnectivity.admin"
-        "roles/secretmanager.admin"
-        "roles/container.clusterAdmin"
-        "roles/container.admin"
-        "roles/iam.serviceAccountAdmin"
-        "roles/resourcemanager.projectIamAdmin"
-        "roles/privateca.admin"
-        "roles/compute.admin"
-    )
+- Grant required roles on each workload project
 
-    # Loop through each role and assign it
+```bash
+ROLES=(
+    "roles/compute.networkAdmin"
+    "roles/compute.admin"
+    "roles/storage.admin"
+    "roles/serviceusage.serviceUsageAdmin"
+    "roles/dns.admin"
+    "roles/iam.serviceAccountUser"
+    "roles/iam.serviceAccountAdmin"
+    "roles/memorystore.admin"
+    "roles/networkconnectivity.admin"
+    "roles/secretmanager.admin"
+    "roles/container.clusterAdmin"
+    "roles/container.admin"
+    "roles/resourcemanager.projectIamAdmin"
+    "roles/privateca.admin"
+    "roles/cloudsql.admin"
+)
+
+for PROJECT_ID in "${WORKLOAD_PROJECTS[@]}"; do
     for ROLE in "${ROLES[@]}"; do
-        echo "Adding $ROLE to $MEMBER on project $PROJECT_ID"
-        gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$MEMBER" --role="$ROLE"
+        echo "[$PROJECT_ID] Adding $ROLE"
+        gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+            --member="serviceAccount:${SA_EMAIL}" \
+            --role="$ROLE"
     done
-    ```
+done
+```
 
-- Export environment variables for Terragrunt
+- Export environment variables before running Terragrunt
 
-    ```bash
-    export GOOGLE_APPLICATION_CREDENTIALS="/path/to/nz3es-automation-sa-key.json"
-    export GCP_PROJECT="iac-01"
-    export GCP_REGION="australia-southeast2"
-    ```
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS="/path/to/nz3es-automation-sa.json"
+export GCP_PROJECT="nz3es-infra-mgmt"  # project hosting the Terraform state bucket
+export GCP_REGION="australia-southeast2"
+```
 
 ## Folder Structure
 
