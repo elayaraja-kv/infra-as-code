@@ -8,8 +8,8 @@ include "service_account" {
 }
 
 locals {
-  sa_name   = basename(get_terragrunt_dir())  # "external-dns"
-  namespace = basename(get_terragrunt_dir())  # k8s namespace (matches SA name)
+  sa_name   = basename(get_terragrunt_dir()) # "external-dns"
+  namespace = basename(get_terragrunt_dir()) # k8s namespace (matches SA name)
 }
 
 # Generates the Workload Identity IAM binding as a plain google provider resource.

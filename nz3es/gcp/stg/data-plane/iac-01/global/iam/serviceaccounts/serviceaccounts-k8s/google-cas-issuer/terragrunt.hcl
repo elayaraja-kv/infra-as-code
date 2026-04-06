@@ -8,10 +8,10 @@ include "workload_identity" {
 }
 
 locals {
-  sa_name      = basename(get_terragrunt_dir())  # GCP SA name: "google-cas-issuer"
-  namespace    = basename(get_terragrunt_dir())  # k8s namespace: "google-cas-issuer"
-  k8s_sa_name  = "cert-manager-google-cas-issuer"  # actual KSA name created by the Helm chart
-  base_path = "${get_repo_root()}/${include.root.locals.org}/${include.root.locals.provider}/${include.root.locals.environment}/${include.root.locals.plane}/${include.root.locals.project}"
+  sa_name     = basename(get_terragrunt_dir())   # GCP SA name: "google-cas-issuer"
+  namespace   = basename(get_terragrunt_dir())   # k8s namespace: "google-cas-issuer"
+  k8s_sa_name = "cert-manager-google-cas-issuer" # actual KSA name created by the Helm chart
+  base_path   = "${get_repo_root()}/${include.root.locals.org}/${include.root.locals.provider}/${include.root.locals.environment}/${include.root.locals.plane}/${include.root.locals.project}"
 }
 
 dependency "private_ca" {

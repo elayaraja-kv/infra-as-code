@@ -8,7 +8,7 @@ include "service_account" {
 }
 
 locals {
-  sa_name = basename(get_terragrunt_dir())  # "github-runner-vm"
+  sa_name = basename(get_terragrunt_dir()) # "github-runner-vm"
 }
 
 # Allows the runner VM to read the GitHub App private key from Secret Manager at boot.

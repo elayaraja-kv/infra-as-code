@@ -4,7 +4,7 @@ terraform {
 
 # Default inputs — override from individual DNS zone terragrunt.hcl
 inputs = {
-  type       = "private"
-  recordsets = []
+  type                               = "private"
+  recordsets                         = []
   private_visibility_config_networks = []
 }

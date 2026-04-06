@@ -21,9 +21,9 @@ dependency "network" {
 }
 
 inputs = {
-  project_id  = include.root.locals.project_id
-  region      = include.root.locals.region
-  network     = dependency.network.outputs.network_name
-  router      = "nat-router-${include.root.locals.region_short}"
-  name        = "cloud-nat-${include.root.locals.region_short}"
+  project_id = include.root.locals.project_id
+  region     = include.root.locals.region
+  network    = dependency.network.outputs.network_name
+  router     = "nat-router-${include.root.locals.region_short}"
+  name       = "cloud-nat-${include.root.locals.region_short}"
 }

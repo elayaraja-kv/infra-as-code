@@ -20,11 +20,11 @@ inputs = {
   ip_configuration = {
     ipv4_enabled                                  = false
     enable_private_path_for_google_cloud_services = true
-    private_network               = null
-    allocated_ip_range            = null
-    authorized_networks           = []
-    psc_enabled                   = true
-    psc_allowed_consumer_projects = []
+    private_network                               = null
+    allocated_ip_range                            = null
+    authorized_networks                           = []
+    psc_enabled                                   = true
+    psc_allowed_consumer_projects                 = []
   }
 
   # Backups

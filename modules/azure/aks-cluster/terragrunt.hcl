@@ -61,7 +61,7 @@ inputs = {
 
   # Add-ons (optional)
   azure_policy_enabled = false
-  oms_agent_enabled    = false  # disable Container Insights; set log_analytics_workspace_id per cluster to enable
+  oms_agent_enabled    = false # disable Container Insights; set log_analytics_workspace_id per cluster to enable
 
   # node_pools intentionally omitted — deployment unit sets this with dependency
   # references inside the map values, which breaks deep-merge evaluation context.

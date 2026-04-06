@@ -23,8 +23,8 @@ inputs = {
     "gkebackup.googleapis.com",
 
     # Databases
-    "sqladmin.googleapis.com",       # Cloud SQL
-    "memorystore.googleapis.com",    # Memorystore for Valkey
+    "sqladmin.googleapis.com",    # Cloud SQL
+    "memorystore.googleapis.com", # Memorystore for Valkey
 
     # Security & identity
     "iam.googleapis.com",
