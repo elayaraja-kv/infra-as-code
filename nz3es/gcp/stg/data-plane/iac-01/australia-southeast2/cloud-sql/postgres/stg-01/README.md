@@ -3,13 +3,13 @@
 ## Databases
 
 | Database | Owner |
-|---|---|
+| --- | --- |
 | `users` | `users-owner` |
 
 ## Users
 
 | User | Role | Connection Limit |
-|---|---|---|
+| --- | --- | --- |
 | `users-owner` | Owner | 68 (75% of 90 usable) |
 | `users-reader` | Read-only | 22 (25% of 90 usable) |
 
@@ -43,6 +43,40 @@ WHERE rolname IN ('users-owner', 'users-reader');
 > ```bash
 > gcloud sql connect <INSTANCE_NAME> --user=postgres --project=iac-01
 > ```
+
+## Monitoring Connections
+
+Active connections grouped by user for the `users` database:
+
+```sql
+SELECT usename, count(*) AS connections
+FROM pg_stat_activity
+WHERE datname = 'users'
+GROUP BY usename
+ORDER BY connections DESC;
+```
+
+Across all databases:
+
+```sql
+SELECT usename, datname, count(*) AS connections
+FROM pg_stat_activity
+GROUP BY usename, datname
+ORDER BY connections DESC;
+```
+
+Usage vs limit per user:
+
+```sql
+SELECT
+    r.rolname        AS user,
+    r.rolconnlimit   AS max_connections,
+    count(a.usename) AS current_connections
+FROM pg_roles r
+LEFT JOIN pg_stat_activity a ON a.usename = r.rolname
+WHERE r.rolname IN ('users-owner', 'users-reader')
+GROUP BY r.rolname, r.rolconnlimit;
+```
 
 ## TODO: Automate Connection Limits via Terraform
 
