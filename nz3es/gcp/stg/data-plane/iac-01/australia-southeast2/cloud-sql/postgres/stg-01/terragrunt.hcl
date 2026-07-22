@@ -15,7 +15,11 @@ inputs = {
   project_id = include.root.locals.project_id
   name       = local.instance_name
   region     = include.root.locals.region
-  tier       = "db-f1-micro" # 1 shared vCPU, 614 MB RAM — upgrade for production
+  edition    = "ENTERPRISE_PLUS"       # required for PSC-enabled instances
+  tier       = "db-perf-optimized-N-2" # smallest tier available on ENTERPRISE_PLUS (2 vCPU) — db-f1-micro/shared-core not supported with PSC
+
+  # temporarily disabled to allow intentional teardown of the instance for testing purposes. Re-enable once the POC is complete.
+  deletion_protection = true
 
   ip_configuration = {
     ipv4_enabled                                  = false

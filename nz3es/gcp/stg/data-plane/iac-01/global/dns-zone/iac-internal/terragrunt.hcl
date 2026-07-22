@@ -18,6 +18,15 @@ dependency "network" {
   mock_outputs_allowed_terraform_commands = ["validate", "plan"]
 }
 
+dependency "postgres_psc_endpoint" {
+  config_path = "../../../australia-southeast2/cloud-sql/postgres/stg-01/psc-endpoint"
+
+  mock_outputs = {
+    ip_address = "10.1.0.20"
+  }
+  mock_outputs_allowed_terraform_commands = ["validate", "plan"]
+}
+
 # dependency "valkey" {
 #   config_path = "../../../australia-southeast2/memorystore/volatile-lru"
 
@@ -65,7 +74,7 @@ inputs = {
       name    = "db"
       type    = "A"
       ttl     = 300
-      records = ["10.1.0.20"]
+      records = [dependency.postgres_psc_endpoint.outputs.ip_address]
     },
     # {
     #   name = "volatile-lru"
