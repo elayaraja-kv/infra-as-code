@@ -93,17 +93,30 @@ remote_state {
 # EOF
 # }
 
-# Provider config generation (commented out — upstream modules via tfr://
-# have their own versions.tf. Provider project/region set via env vars:
-# GOOGLE_PROJECT, GOOGLE_REGION, or gcloud application-default credentials).
-# generate "provider" {
-#   path      = "provider.tf"
-#   if_exists = "skip"
-#   contents  = <<EOF
-# provider "google" {
-#   project = "${local.project_id}"
-#   region  = "${local.region}"
-# }
-#
-# EOF
-# }
+# Provider config generation. Sets user_project_override + billing_project so
+# API-enablement/quota checks bill against the target project (local.project_id)
+# instead of falling back to the credentials' own home project (e.g. the
+# automation SA lives in nz3es-infra-mgmt, which caused 403 SERVICE_DISABLED
+# errors against the wrong project number when this was left to provider
+# defaults). google-beta is configured identically since several upstream
+# modules (e.g. sql-db/postgresql) pin specific resources to it via
+# `provider = google-beta`.
+generate "provider" {
+  path      = "provider.tf"
+  if_exists = "overwrite"
+  contents  = <<EOF
+provider "google" {
+  project               = "${local.project_id}"
+  region                = "${local.gcp_region}"
+  user_project_override = true
+  billing_project       = "${local.project_id}"
+}
+
+provider "google-beta" {
+  project               = "${local.project_id}"
+  region                = "${local.gcp_region}"
+  user_project_override = true
+  billing_project       = "${local.project_id}"
+}
+EOF
+}

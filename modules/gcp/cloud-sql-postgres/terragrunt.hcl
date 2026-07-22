@@ -33,7 +33,7 @@ inputs = {
     start_time                     = "16:00" # 16:00 UTC = 04:00 NZST (off-peak)
     point_in_time_recovery_enabled = true
     transaction_log_retention_days = 7
-    retained_backups               = 7
+    retained_backups               = 8 # must be > transaction_log_retention_days
     retention_unit                 = "COUNT"
     backup_retention_settings      = []
   }
